@@ -22,14 +22,21 @@ class Game:
     def draw(self, screen):
         screen.fill(BLACK)
 
-        for x, y in self.snake.positions:
+        # Dessiner toutes les positions du serpent (le serpent grandit avec self.length)
+        for i, (x, y) in enumerate(self.snake.positions):
             pygame.draw.rect(
                 screen, GREEN,
                 (x*GRID_SIZE, y*GRID_SIZE, GRID_SIZE, GRID_SIZE)
             )
 
+        # Dessiner la nourriture
         fx, fy = self.food
         pygame.draw.rect(
             screen, RED,
             (fx*GRID_SIZE, fy*GRID_SIZE, GRID_SIZE, GRID_SIZE)
         )
+        
+        # Afficher le score et la longueur pour debug
+        font = pygame.font.Font(None, 36)
+        score_text = font.render(f"Score: {self.snake.score} | Longueur: {self.snake.length}", True, WHITE)
+        screen.blit(score_text, (10, 10))

@@ -12,9 +12,17 @@ class Snake:
         self.reset()
 
     def reset(self):
-        self.positions = [(GRID_WIDTH//2, GRID_HEIGHT//2)]
         self.direction = random.choice(DIRECTIONS)
         self.length = 3
+        # Initialiser le serpent avec 3 positions alignées dans la direction
+        start_x = GRID_WIDTH // 2
+        start_y = GRID_HEIGHT // 2
+        self.positions = []
+        for i in range(self.length):
+            # Créer les positions en reculant de la direction
+            pos_x = (start_x - i * self.direction[0]) % GRID_WIDTH
+            pos_y = (start_y - i * self.direction[1]) % GRID_HEIGHT
+            self.positions.append((pos_x, pos_y))
         self.alive = True
         self.score = 0
         self.steps = 0
@@ -41,15 +49,21 @@ class Snake:
             self.alive = False
             return False
 
+        # Ajouter la nouvelle position de la tête
         self.positions.insert(0, new)
 
         if new == food:
+            # Le serpent a mangé : augmenter le score et la taille
             self.score += 1
-            self.length += 1
+            self.length += 1  # Augmente la taille du serpent
             self.steps_without_food = 0
+            # Ne pas tronquer : la liste a maintenant self.length éléments (ancienne longueur + 1 nouvelle position)
             return True
 
+        # Si le serpent n'a pas mangé, tronquer pour garder exactement self.length éléments
+        # On garde les self.length premières positions (la tête + le corps)
         self.positions = self.positions[:self.length]
+        
         self.steps += 1
         self.steps_without_food += 1
 
