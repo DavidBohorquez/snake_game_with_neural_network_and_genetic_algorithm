@@ -7,16 +7,19 @@ from game import Game
 
 class GeneticAlgorithm:
     def __init__(self, size=50):
+        """
+        Initialise l'algorithme génétique avec des paramètres équilibrés.
+        """
         self.size = size
         self.population = [Snake() for _ in range(size)]
         self.generation = 1
         self.best_fitness = 0
         self.history = []
-        # Paramètres de l'algorithme génétique
-        self.mutation_rate = 0.1
-        self.crossover_rate = 0.7
-        self.elite_size = int(size * 0.1)  # 10% de la population pour l'élitisme
-        self.tournament_size = 5
+        # Paramètres équilibrés de l'algorithme génétique
+        self.mutation_rate = 0.1  # Taux standard
+        self.crossover_rate = 0.7  # Taux standard
+        self.elite_size = int(size * 0.1)  # 10% de la population
+        self.tournament_size = 5  # Taille standard du tournoi
 
     def evaluate(self):
         """
@@ -55,7 +58,7 @@ class GeneticAlgorithm:
     def select(self):
         """
         Sélectionne les meilleurs serpents pour la reproduction.
-        Utilise une combinaison d'élitisme et de sélection par tournoi.
+        Utilise élitisme + sélection par tournoi (méthode simple et efficace).
         """
         selected = []
         
@@ -65,7 +68,6 @@ class GeneticAlgorithm:
         
         # Sélection par tournoi pour le reste
         while len(selected) < self.size:
-            # Tournoi : choisir k individus aléatoires et prendre le meilleur
             tournament = random.sample(self.population, min(self.tournament_size, len(self.population)))
             winner = max(tournament, key=lambda s: s.fitness)
             selected.append(winner)
@@ -79,13 +81,12 @@ class GeneticAlgorithm:
         """
         new_population = []
         
-        # Garder les élites (sans modification)
+        # Garder les élites sans modification
         for i in range(self.elite_size):
             new_population.append(selected[i])
         
         # Créer le reste de la population par reproduction
         while len(new_population) < self.size:
-            # Sélectionner deux parents
             parent1 = random.choice(selected)
             parent2 = random.choice(selected)
             
@@ -93,18 +94,14 @@ class GeneticAlgorithm:
             if random.random() < self.crossover_rate:
                 child_network = NeuralNetwork.crossover(parent1.network, parent2.network)
             else:
-                # Pas de crossover, copier un parent
                 child_network = NeuralNetwork(weights=parent1.network.get_weights())
             
             # Mutation
             if random.random() < self.mutation_rate:
                 child_network.mutate(rate=self.mutation_rate)
             
-            # Créer le nouveau serpent
             new_population.append(Snake(network=child_network))
         
-        # Mettre à jour la population
         self.population = new_population
         self.generation += 1
-        
         return new_population

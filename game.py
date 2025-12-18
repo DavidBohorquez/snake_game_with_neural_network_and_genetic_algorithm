@@ -36,7 +36,8 @@ class Game:
             (fx*GRID_SIZE, fy*GRID_SIZE, GRID_SIZE, GRID_SIZE)
         )
         
-        # Afficher le score et la longueur pour debug
+        # Afficher le score, la longueur et le nombre de positions pour debug
         font = pygame.font.Font(None, 36)
-        score_text = font.render(f"Score: {self.snake.score} | Longueur: {self.snake.length}", True, WHITE)
+        debug_text = f"Score: {self.snake.score} | Longueur: {self.snake.length} | Positions: {len(self.snake.positions)}"
+        score_text = font.render(debug_text, True, WHITE)
         screen.blit(score_text, (10, 10))
