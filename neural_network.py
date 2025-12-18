@@ -2,14 +2,17 @@
 import numpy as np
 
 class NeuralNetwork:
-    def __init__(self, input_nodes=13, hidden_nodes=16, output_nodes=4, weights=None):
+    def __init__(self, input_nodes=19, hidden_nodes=24, output_nodes=4, weights=None):
         self.input_nodes = input_nodes
         self.hidden_nodes = hidden_nodes
         self.output_nodes = output_nodes
 
         if weights is None:
-            self.weights_input_hidden = np.random.randn(input_nodes, hidden_nodes)
-            self.weights_hidden_output = np.random.randn(hidden_nodes, output_nodes)
+            # Initialisation Xavier/He améliorée pour de meilleures performances
+            limit_input = np.sqrt(2.0 / input_nodes)
+            limit_hidden = np.sqrt(2.0 / hidden_nodes)
+            self.weights_input_hidden = np.random.randn(input_nodes, hidden_nodes) * limit_input
+            self.weights_hidden_output = np.random.randn(hidden_nodes, output_nodes) * limit_hidden
         else:
             self.weights_input_hidden, self.weights_hidden_output = weights
 
@@ -28,10 +31,12 @@ class NeuralNetwork:
     def get_weights(self):
         return [self.weights_input_hidden.copy(), self.weights_hidden_output.copy()]
 
-    def mutate(self, rate=0.1):
+    def mutate(self, rate=0.15):
+        # Mutation améliorée avec variation adaptative
         for w in [self.weights_input_hidden, self.weights_hidden_output]:
             mask = np.random.random(w.shape) < rate
-            w[mask] += np.random.randn(*w[mask].shape) * 0.5
+            # Mutation plus agressive pour permettre plus d'exploration
+            w[mask] += np.random.randn(*w[mask].shape) * 0.8
 
     @staticmethod
     def crossover(p1, p2):

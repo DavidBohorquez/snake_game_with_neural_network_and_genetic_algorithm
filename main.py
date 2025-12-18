@@ -6,78 +6,80 @@ from game import Game
 from utils import plot_fitness
 
 def main():
-    # Initialisation de Pygame : cr├®ation de la fen├¬tre et du contr├┤leur de FPS
+    # Initialisation de Pygame : création de la fenêtre et du contrôleur de FPS
     screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
     clock = pygame.time.Clock()
 
-    # Cr├®ation de l'algorithme g├®n├®tique avec une population par d├®faut (50 serpents)
-    ga = GeneticAlgorithm()
+    # Création de l'algorithme génétique avec une population plus grande pour meilleur apprentissage
+    ga = GeneticAlgorithm(size=100)  # Population augmentée de 50 à 100
     
-    # MODIFI├ë : D├®finition du nombre maximum de g├®n├®rations ├á ex├®cuter
-    # Permet de limiter l'├®volution ├á 100 g├®n├®rations pour observer les r├®sultats
-    max_generations = 100
+    # MODIFIÉ : Définition du nombre maximum de générations à exécuter
+    # Augmenté à 500 générations pour permettre un meilleur apprentissage
+    max_generations = 500
 
     running = True
-    # MODIFI├ë : Boucle principale qui s'ex├®cute jusqu'├á 100 g├®n├®rations
-    # Au lieu de jouer un seul serpent, on fait ├®voluer toute la population
+    # MODIFIÉ : Boucle principale qui s'exécute jusqu'à 100 générations
+    # Au lieu de jouer un seul serpent, on fait évoluer toute la population
     while running and ga.generation <= max_generations:
-        # Gestion des ├®v├®nements Pygame (fermeture de la fen├¬tre)
+        # Gestion des événements Pygame (fermeture de la fenêtre)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
 
-        # MODIFI├ë : ├ëvaluation de toute la population
-        # Cette m├®thode fait jouer chaque serpent de la population jusqu'├á sa mort,
-        # calcule leur fitness (score, dur├®e de vie, efficacit├®) et les trie par performance
+        # MODIFIÉ : Évaluation de toute la population
+        # Cette méthode fait jouer chaque serpent de la population jusqu'à sa mort,
+        # calcule leur fitness (score, durée de vie, efficacité) et les trie par performance
+        # Affiche un message pour indiquer le début de l'évaluation
+        print(f"Évaluation de la génération {ga.generation}...")
         ga.evaluate()
         
-        # MODIFI├ë : R├®cup├®ration et affichage du meilleur serpent de la g├®n├®ration
-        # Apr├¿s l'├®valuation, la population est tri├®e par fitness d├®croissante,
-        # donc le premier ├®l├®ment est le meilleur individu
+        # MODIFIÉ : Récupération et affichage du meilleur serpent de la génération
+        # Après l'évaluation, la population est triée par fitness décroissante,
+        # donc le premier élément est le meilleur individu
         best_snake = ga.population[0]
         
-        # R├®initialisation du meilleur serpent pour pouvoir le visualiser
-        # (remet le serpent ├á sa position initiale, score ├á 0, etc.)
+        # Réinitialisation du meilleur serpent pour pouvoir le visualiser
+        # (remet le serpent à sa position initiale, score à 0, etc.)
         best_snake.reset()
         
-        # Cr├®ation d'un nouveau jeu avec le meilleur serpent pour visualisation
+        # Création d'un nouveau jeu avec le meilleur serpent pour visualisation
         game = Game(best_snake)
         
-        # MODIFI├ë : Boucle de visualisation du meilleur serpent
-        # Affiche le meilleur serpent de chaque g├®n├®ration pour observer l'├®volution
+        # MODIFIÉ : Boucle de visualisation du meilleur serpent
+        # Affiche le meilleur serpent de chaque génération pour observer l'évolution
         while best_snake.alive:
-            # Gestion des ├®v├®nements pendant le jeu (permet de fermer la fen├¬tre)
+            # Gestion des événements pendant le jeu (permet de fermer la fenêtre)
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
                     break
             
-            # Si l'utilisateur a ferm├® la fen├¬tre, on sort de la boucle
+            # Si l'utilisateur a fermé la fenêtre, on sort de la boucle
             if not running:
                 break
                 
-            # Mise ├á jour du jeu : le serpent r├®fl├®chit et se d├®place
+            # Mise à jour du jeu : le serpent réfléchit et se déplace
             game.update()
             
-            # Affichage du jeu ├á l'├®cran (serpent et nourriture)
+            # Affichage du jeu à l'écran (serpent et nourriture)
             game.draw(screen)
             pygame.display.flip()
             
-            # Contr├┤le de la vitesse du jeu (60 FPS)
+            # Contrôle de la vitesse du jeu (60 FPS)
             clock.tick(FPS)
         
-        # MODIFI├ë : S├®lection et reproduction pour cr├®er la prochaine g├®n├®ration
-        # S├®lection : choisit les meilleurs serpents (├®litisme + tournoi)
+        # MODIFIÉ : Sélection et reproduction pour créer la prochaine génération
+        # Sélection : choisit les meilleurs serpents (élitisme + tournoi)
         selected = ga.select()
         
-        # Reproduction : cr├®e une nouvelle g├®n├®ration ├á partir des s├®lectionn├®s
-        # Applique crossover (combinaison des r├®seaux neuronaux) et mutation
-        # Incr├®mente automatiquement le compteur de g├®n├®rations
+        # Reproduction : crée une nouvelle génération à partir des sélectionnés
+        # Applique crossover (combinaison des réseaux neuronaux) et mutation
+        # Incrémente automatiquement le compteur de générations
         ga.reproduce(selected)
 
-    # MODIFI├ë : Affichage du graphique de progression de la fitness
-    # Trace l'├®volution de la meilleure fitness ├á travers les g├®n├®rations
-    # Permet de visualiser l'am├®lioration de l'algorithme g├®n├®tique
+    # MODIFIÉ : Affichage du graphique de progression de la fitness
+    # Trace l'évolution de la meilleure fitness à travers les générations
+    # Permet de visualiser l'amélioration de l'algorithme génétique
     plot_fitness(ga.history)
     
     # Fermeture propre de Pygame

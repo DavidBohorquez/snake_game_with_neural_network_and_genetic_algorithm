@@ -6,29 +6,29 @@ from neural_network import NeuralNetwork
 from game import Game
 
 class GeneticAlgorithm:
-    def __init__(self, size=50):
+    def __init__(self, size=100):
         self.size = size
         self.population = [Snake() for _ in range(size)]
         self.generation = 1
         self.best_fitness = 0
         self.history = []
-        # Param├¿tres de l'algorithme g├®n├®tique
-        self.mutation_rate = 0.1
-        self.crossover_rate = 0.7
-        self.elite_size = int(size * 0.1)  # 10% de la population pour l'├®litisme
-        self.tournament_size = 5
+        # Paramètres de l'algorithme génétique améliorés
+        self.mutation_rate = 0.15  # Augmenté pour plus d'exploration
+        self.crossover_rate = 0.8  # Augmenté pour plus de combinaison
+        self.elite_size = int(size * 0.15)  # 15% de la population pour l'élitisme
+        self.tournament_size = 7  # Augmenté pour meilleure sélection
 
     def evaluate(self):
         """
-        ├ëvalue chaque serpent de la population en le faisant jouer.
-        Calcule la fitness de chaque individu et met ├á jour les statistiques.
+        Évalue chaque serpent de la population en le faisant jouer.
+        Calcule la fitness de chaque individu et met à jour les statistiques.
         """
         for snake in self.population:
             snake.reset()
             game = Game(snake)
             
-            # Faire jouer le serpent jusqu'├á ce qu'il meure
-            max_steps = 2000  # Limite pour ├®viter les boucles infinies
+            # Faire jouer le serpent jusqu'à ce qu'il meure
+            max_steps = 5000  # Limite augmentée pour permettre plus d'exploration et d'apprentissage
             steps = 0
             while snake.alive and steps < max_steps:
                 game.update()
@@ -40,32 +40,35 @@ class GeneticAlgorithm:
         # Trier la population par fitness (meilleur en premier)
         self.population.sort(key=lambda s: s.fitness, reverse=True)
         
-        # Mettre ├á jour la meilleure fitness
+        # Mettre à jour la meilleure fitness
         current_best = self.population[0].fitness
         if current_best > self.best_fitness:
             self.best_fitness = current_best
         
-        # Enregistrer la meilleure fitness de cette g├®n├®ration
+        # Enregistrer la meilleure fitness de cette génération
         self.history.append(current_best)
         
-        print(f"G├®n├®ration {self.generation} - Meilleure fitness: {current_best:.2f}, Score: {self.population[0].score}")
+        # Afficher plus d'informations pour suivre la progression
+        avg_fitness = sum(s.fitness for s in self.population) / len(self.population)
+        print(f"Génération {self.generation} - Meilleure fitness: {current_best:.2f}, Score: {self.population[0].score}, "
+              f"Fitness moyenne: {avg_fitness:.2f}, Meilleur score global: {max(s.score for s in self.population)}")
         
         return True
 
     def select(self):
         """
-        S├®lectionne les meilleurs serpents pour la reproduction.
-        Utilise une combinaison d'├®litisme et de s├®lection par tournoi.
+        Sélectionne les meilleurs serpents pour la reproduction.
+        Utilise une combinaison d'élitisme et de sélection par tournoi.
         """
         selected = []
         
-        # ├ëlitisme : garder les meilleurs individus
+        # Élitisme : garder les meilleurs individus
         for i in range(self.elite_size):
             selected.append(self.population[i])
         
-        # S├®lection par tournoi pour le reste
+        # Sélection par tournoi pour le reste
         while len(selected) < self.size:
-            # Tournoi : choisir k individus al├®atoires et prendre le meilleur
+            # Tournoi : choisir k individus aléatoires et prendre le meilleur
             tournament = random.sample(self.population, min(self.tournament_size, len(self.population)))
             winner = max(tournament, key=lambda s: s.fitness)
             selected.append(winner)
@@ -74,18 +77,18 @@ class GeneticAlgorithm:
 
     def reproduce(self, selected):
         """
-        Cr├®e une nouvelle g├®n├®ration ├á partir des serpents s├®lectionn├®s.
+        Crée une nouvelle génération à partir des serpents sélectionnés.
         Applique crossover et mutation.
         """
         new_population = []
         
-        # Garder les ├®lites (sans modification)
+        # Garder les élites (sans modification)
         for i in range(self.elite_size):
             new_population.append(selected[i])
         
-        # Cr├®er le reste de la population par reproduction
+        # Créer le reste de la population par reproduction
         while len(new_population) < self.size:
-            # S├®lectionner deux parents
+            # Sélectionner deux parents
             parent1 = random.choice(selected)
             parent2 = random.choice(selected)
             
@@ -96,14 +99,17 @@ class GeneticAlgorithm:
                 # Pas de crossover, copier un parent
                 child_network = NeuralNetwork(weights=parent1.network.get_weights())
             
-            # Mutation
-            if random.random() < self.mutation_rate:
+            # Mutation (toujours appliquer une petite mutation même si le taux n'est pas atteint)
+            mutation_prob = random.random()
+            if mutation_prob < self.mutation_rate:
                 child_network.mutate(rate=self.mutation_rate)
+            elif mutation_prob < self.mutation_rate + 0.05:  # Petite mutation aléatoire
+                child_network.mutate(rate=0.05)  # Mutation légère pour maintenir la diversité
             
-            # Cr├®er le nouveau serpent
+            # Créer le nouveau serpent
             new_population.append(Snake(network=child_network))
         
-        # Mettre ├á jour la population
+        # Mettre à jour la population
         self.population = new_population
         self.generation += 1
         
