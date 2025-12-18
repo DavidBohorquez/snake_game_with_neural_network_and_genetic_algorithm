@@ -14,10 +14,12 @@ Implémentation d'un algorithme génétique pour optimiser les paramètres d'un 
 
 **Implémentation** :
 - Chaque serpent de la population joue une partie complète jusqu'à sa mort
-- La fitness est calculée en fonction de :
-  - **Score** : `score * 100` (chaque nourriture mangée = 100 points)
-  - **Durée de vie** : `steps * 0.1` (récompense pour survivre)
-  - **Efficacité des mouvements** : `-steps_without_food * 0.2` (pénalité pour tourner sans manger)
+- La fitness est calculée avec une fonction améliorée qui récompense mieux les bons comportements :
+  - **Score de base** : `score * 200` (chaque nourriture mangée = 200 points)
+  - **Bonus quadratique** : `(score ** 2) * 50` (bonus exponentiel pour encourager les scores élevés)
+  - **Survie** : `steps * 0.5` (récompense pour survivre, plus importante qu'avant)
+  - **Pénalité de faim** : `-steps_without_food * 0.1` (pénalité réduite pour donner plus de chances)
+  - **Bonus d'efficacité** : `(score / steps) * 100` (récompense les serpents qui mangent rapidement)
 - Cette méthode met à jour la valeur de fitness de chaque individu
 - La population est triée par fitness décroissante (meilleurs en premier)
 
@@ -84,37 +86,60 @@ snake_game_with_neural_network_and_genetic_algorithm/
 
 ---
 
+## 🧠 Améliorations du réseau de neurones et de la vision
+
+### Réseau de neurones amélioré
+- **Architecture** : 19 entrées → 24 neurones cachés → 4 sorties
+- **Initialisation** : Xavier/He pour une meilleure convergence
+- **Fonction d'activation** : ReLU pour la couche cachée, Sigmoid pour la sortie
+
+### Vision améliorée (19 entrées)
+Le serpent perçoit maintenant :
+- **Distance à la nourriture** : 2 valeurs (dx, dy avec wrap-around)
+- **Direction vers la nourriture** : 2 valeurs (dir_x, dir_y normalisées)
+- **Détection d'obstacles** : 4 valeurs (distance au corps dans chaque direction)
+- **Direction actuelle** : 4 valeurs (one-hot encoding)
+- **Informations supplémentaires** : 7 valeurs (longueur, steps sans nourriture, distance euclidienne, positions tête/nourriture)
+
+Cette vision enrichie permet au serpent de prendre de meilleures décisions.
+
+---
+
 ## ⚙️ Paramètres de l'algorithme génétique
 
 Les paramètres sont définis dans `genetic_algorithm.py` :
 
-- **Taille de la population** : 50 serpents (par défaut)
-- **Taux de mutation** : 10% (petit taux pour éviter de détruire les bonnes solutions)
-- **Taux de crossover** : 70% (taux élevé pour favoriser la combinaison des bonnes caractéristiques)
-- **Élitisme** : 10% de la population (5 meilleurs serpents conservés)
-- **Taille du tournoi** : 5 individus
-- **Nombre de générations** : 100 (configurable dans `main.py`)
+- **Taille de la population** : 100 serpents (augmenté de 50 pour meilleur apprentissage)
+- **Taux de mutation** : 15% (augmenté pour plus d'exploration)
+- **Taux de crossover** : 80% (augmenté pour favoriser la combinaison des bonnes caractéristiques)
+- **Élitisme** : 15% de la population (15 meilleurs serpents conservés)
+- **Taille du tournoi** : 7 individus (augmenté pour meilleure sélection)
+- **Nombre de générations** : 500 (augmenté de 100 pour permettre un meilleur apprentissage, configurable dans `main.py`)
+- **Limite de steps par partie** : 5000 (augmenté de 3000)
+- **Limite steps sans nourriture** : 300 (augmenté de 200)
 
 ---
 
 ## 📊 Remarques pratiques
 
 ### Taille de la population
-- Quelques dizaines de serpents (50 par défaut)
-- Permet un bon équilibre entre diversité et performance
+- 100 serpents (augmenté de 50)
+- Permet une meilleure diversité génétique et exploration de l'espace de solutions
 
 ### Nombre de générations
-- Assez pour observer l'évolution (50-100 générations)
-- Configurable dans `main.py` : `max_generations = 100`
+- 500 générations (augmenté de 100)
+- Configurable dans `main.py` : `max_generations = 500`
+- Permet un apprentissage plus approfondi et une meilleure convergence
 
 ### Taux de mutation et de crossover
-- **Mutation** : Petit taux (10%) pour éviter de détruire les bonnes solutions
-- **Crossover** : Taux élevé (70%) pour favoriser la combinaison des caractéristiques
+- **Mutation** : 15% (augmenté de 10%) pour plus d'exploration tout en préservant les bonnes solutions
+- **Crossover** : 80% (augmenté de 70%) pour favoriser la combinaison des caractéristiques
 
 ### Suivi de la progression
 - Stockage de la meilleure fitness de chaque génération dans `self.history`
-- Affichage dans la console : `Génération X - Meilleure fitness: Y, Score: Z`
+- Affichage amélioré dans la console : `Génération X - Meilleure fitness: Y, Score: Z, Fitness moyenne: A, Meilleur score global: B`
 - Graphique de progression à la fin de l'exécution
+![fonction_fitness](graph_fonction_fitness.png)
 
 ---
 
@@ -122,11 +147,11 @@ Les paramètres sont définis dans `genetic_algorithm.py` :
 
 Le cycle complet de l'algorithme génétique :
 
-1. **Initialisation** → Population de 50 serpents avec réseaux neuronaux aléatoires
-2. **Évaluation (evaluate)** → Chaque serpent joue et calcule sa fitness
-3. **Sélection (select)** → Choisir les meilleurs serpents (élitisme + tournoi)
-4. **Reproduction (reproduce)** → Créer nouvelle génération (crossover + mutation)
-5. **Répétition** → Retour à l'étape 2 pour la génération suivante
+1. **Initialisation** → Population de 100 serpents avec réseaux neuronaux aléatoires (19 entrées, 24 neurones cachés, 4 sorties)
+2. **Évaluation (evaluate)** → Chaque serpent joue jusqu'à 5000 steps et calcule sa fitness améliorée
+3. **Sélection (select)** → Choisir les meilleurs serpents (élitisme 15% + tournoi de taille 7)
+4. **Reproduction (reproduce)** → Créer nouvelle génération (crossover 80% + mutation 15%)
+5. **Répétition** → Retour à l'étape 2 pour la génération suivante (jusqu'à 500 générations)
 
 ---
 
@@ -134,10 +159,11 @@ Le cycle complet de l'algorithme génétique :
 
 Au fil des générations, vous devriez observer :
 
-- **Génération 1-10** : Serpents qui meurent rapidement, mangent rarement
-- **Génération 10-30** : Serpents qui commencent à se diriger vers la nourriture
-- **Génération 30-50** : Serpents qui mangent régulièrement
-- **Génération 50-100** : Serpents qui mangent efficacement et survivent plus longtemps
+- **Génération 1-20** : Serpents qui meurent rapidement, mangent rarement
+- **Génération 20-50** : Serpents qui commencent à se diriger vers la nourriture
+- **Génération 50-100** : Serpents qui mangent régulièrement (score 1-3)
+- **Génération 100-200** : Serpents qui mangent efficacement et survivent plus longtemps (score 3-5)
+- **Génération 200-500** : Serpents qui optimisent leur stratégie et atteignent des scores élevés (score 5+)
 
 Le graphique de fitness devrait montrer une courbe ascendante, indiquant que les serpents apprennent progressivement à mieux jouer.
 
@@ -146,13 +172,16 @@ Le graphique de fitness devrait montrer une courbe ascendante, indiquant que les
 ## 🔧 Dépannage
 
 ### Les serpents n'apprennent pas
-- Augmentez le nombre de générations dans `main.py`
-- Vérifiez que la fitness augmente dans la console
-- Ajustez les taux de mutation/crossover si nécessaire
+- Vérifiez que la fitness augmente dans la console (devrait augmenter progressivement)
+- Avec 500 générations et 100 serpents, l'apprentissage prend du temps mais est plus efficace
+- La fonction de fitness améliorée récompense mieux les bons comportements
 
 ### Performance lente
-- Réduisez la taille de la population dans `genetic_algorithm.py`
-- Réduisez `max_steps` dans `evaluate()` pour limiter la durée des parties
+- L'évaluation de 100 serpents peut prendre du temps (c'est normal)
+- Chaque génération peut prendre plusieurs minutes selon la performance
+- Pour accélérer : réduisez la population à 50 dans `genetic_algorithm.py` (ligne 9)
+- Réduisez `max_steps` dans `evaluate()` (ligne 31) pour limiter la durée des parties
+- Réduisez `max_generations` dans `main.py` (ligne 18) si vous voulez tester rapidement
 
 ---
 
